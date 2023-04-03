@@ -140,6 +140,27 @@ static const ColorScheme schemes[] = {
 	  "#61afef", "#c678dd", "#56b6c2", "#dcdfe4",
 	  [256]="#cccccc", "#555555"}, 7, 0, 256, 257},
 
+	// gruvbox material
+	{{ /* 8 normal colors */
+	  [0] = "#282828", /* hard contrast: #1d2021 / soft contrast: #32302f */
+	  [1] = "#ea6962", /* red     */
+	  [2] = "#a9b665", /* green   */
+	  [3] = "#d8a657", /* yellow  */
+	  [4] = "#7daea3", /* blue    */
+	  [5] = "#d3869b", /* magenta */
+	  [6] = "#89b482", /* cyan    */
+	  [7] = "#d4be98", /* white   */
+	  /* 8 bright colors */
+	  [8]  = "#928374", /* black   */
+	  [9]  = "#ef938e", /* red     */
+	  [10] = "#bbc585", /* green   */
+	  [11] = "#e1bb7e", /* yellow  */
+	  [12] = "#9dc2ba", /* blue    */
+	  [13] = "#e1acbb", /* magenta */
+	  [14] = "#a7c7a2", /* cyan    */
+	  [15] = "#e2d3ba", /* white   */
+	 }, 15, 0, 15, 257},
+
 	// One Half light
 	{{"#fafafa", "#e45649", "#50a14f", "#c18401",
 	  "#0184bc", "#a626a4", "#0997b3", "#383a42",
@@ -177,7 +198,7 @@ static const ColorScheme schemes[] = {
 };
 
 static const char * const * colorname;
-int colorscheme = 0;
+int colorscheme = 4;
 
 /*
  * Default colors (colorname index)
@@ -534,6 +555,6 @@ static uint selmasks[] = {
  * of single wide characters.
  */
 static char ascii_printable[] =
-    " !\"#$%&'()*+,-./0123456789:;<=>?"
-    "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-    "`abcdefghijklmnopqrstuvwxyz{|}~";
+	" !\"#$%&'()*+,-./0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmnopqrstuvwxyz{|}~";
