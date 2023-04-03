@@ -59,6 +59,8 @@ static void zoom(const Arg *);
 static void zoomabs(const Arg *);
 static void zoomreset(const Arg *);
 static void ttysend(const Arg *);
+static void nextscheme(const Arg *);
+static void selectscheme(const Arg *);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -185,6 +187,7 @@ static void mousesel(XEvent *, int);
 static void mousereport(XEvent *);
 static char *kmap(KeySym, uint);
 static int match(uint, uint);
+static void updatescheme(void);
 
 static void run(void);
 static void usage(void);
@@ -772,6 +775,7 @@ xloadcolor(int i, const char *name, Color *ncolor)
 	XRenderColor color = { .alpha = 0xffff };
 
 	if (!name) {
+		name = ""; // FIXME
 		if (BETWEEN(i, 16, 255)) { /* 256 color */
 			if (i < 6*6*6+16) { /* same colors as xterm */
 				color.red   = sixd_to_16bit( ((i-16)/36)%6 );
@@ -783,7 +787,7 @@ xloadcolor(int i, const char *name, Color *ncolor)
 			}
 			return XftColorAllocValue(xw.dpy, xw.vis,
 			                          xw.cmap, &color, ncolor);
-		} else
+		} else if (colorname[i])
 			name = colorname[i];
 	}
 
@@ -801,17 +805,13 @@ xloadcols(void)
 		for (cp = dc.col; cp < &dc.col[dc.collen]; ++cp)
 			XftColorFree(xw.dpy, xw.vis, xw.cmap, cp);
 	} else {
-		dc.collen = MAX(LEN(colorname), 256);
+		dc.collen = COLORS_SIZE;
 		dc.col = xmalloc(dc.collen * sizeof(Color));
 	}
 
-	for (i = 0; i < dc.collen; i++)
-		if (!xloadcolor(i, NULL, &dc.col[i])) {
-			if (colorname[i])
-				die("could not allocate color '%s'\n", colorname[i]);
-			else
-				die("could not allocate color %d\n", i);
-		}
+	for (i = 0; i < dc.collen; i++) {
+		xloadcolor(i, NULL, &dc.col[i]);
+	}
 	loaded = 1;
 }
 
@@ -2024,6 +2024,47 @@ usage(void)
 	    " [stty_args ...]\n", argv0, argv0);
 }
 
+void
+nextscheme(const Arg *arg)
+{
+	colorscheme += arg->i;
+	if (colorscheme >= (int)LEN(schemes))
+		colorscheme = 0;
+	else if (colorscheme < 0)
+		colorscheme = LEN(schemes) - 1;
+	updatescheme();
+}
+
+void
+selectscheme(const Arg *arg)
+{
+	if (BETWEEN(arg->i, 0, LEN(schemes)-1)) {
+		colorscheme = arg->i;
+		updatescheme();
+	}
+}
+
+void
+updatescheme(void)
+{
+	int oldbg, oldfg;
+
+	oldbg = defaultbg;
+	oldfg = defaultfg;
+	colorname = schemes[colorscheme].colors;
+	defaultbg = schemes[colorscheme].bg;
+	defaultfg = schemes[colorscheme].fg;
+	defaultcs = schemes[colorscheme].cs;
+	defaultrcs = schemes[colorscheme].rcs;
+	xloadcols();
+	if (defaultbg != oldbg)
+		tupdatebgcolor(oldbg, defaultbg);
+	if (defaultfg != oldfg)
+		tupdatefgcolor(oldfg, defaultfg);
+	cresize(win.w, win.h);
+	redraw();
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -2076,6 +2117,12 @@ main(int argc, char *argv[])
 	} ARGEND;
 
 run:
+	colorname = schemes[colorscheme].colors;
+	defaultbg = schemes[colorscheme].bg;
+	defaultfg = schemes[colorscheme].fg;
+	defaultcs = schemes[colorscheme].cs;
+	defaultrcs = schemes[colorscheme].rcs;
+
 	if (argc > 0) /* eat all remaining arguments */
 		opt_cmd = argv;
 
